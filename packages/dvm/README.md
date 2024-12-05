@@ -1,8 +1,8 @@
-# @welshman/dvm [![version](https://badgen.net/npm/v/@welshman/dvm)](https://npmjs.com/package/@welshman/dvm)
+# @welshman/dvm [![version](https://badgen.npm/v/@welshman/dvm)](https://npmjs.com/package/@welshman/dvm)
 
-Utilities for building nostr DVMs.
+Utilities for building nostr DVMs (Decentralized Virtual Machines).
 
-# Request example
+## Request Example
 
 ```javascript
 import type {Publish, Subscription} from '@welshman/net'
@@ -26,7 +26,7 @@ req.emitter.on(DVMEvent.Progress, (url, event) => console.log(event))
 req.emitter.on(DVMEvent.Result, (url, event) => console.log(event))
 ```
 
-# Handler example
+## Handler Example
 
 ```javascript
 const {bytesToHex} = require('@noble/hashes/utils')
@@ -87,3 +87,70 @@ dvm.start()
 // When you're done
 dvm.stop()
 ```
+
+## Additional Features
+
+### DVM Request Options
+
+```typescript
+type DVMRequestOptions = {
+  event: SignedEvent        // The DVM request event
+  relays: string[]         // Relays to publish/subscribe to
+  timeout?: number         // Request timeout (default: 30s)
+  autoClose?: boolean      // Close after first result (default: true)
+  reportProgress?: boolean // Listen for progress events (default: true)
+}
+```
+
+### Event Types
+
+```typescript
+enum DVMEvent {
+  Progress = "progress", // Kind 7000 events
+  Result = "result"     // Kind x+1000 events
+}
+```
+
+### DVM Handler Configuration
+
+```typescript
+type DVMOpts = {
+  sk: string                                    // Private key in hex
+  relays: string[]                             // Relays to listen on
+  handlers: Record<string, CreateDVMHandler>    // Kind-specific handlers
+  expireAfter?: number                         // Result expiration (default: 1h)
+  requireMention?: boolean                     // Require p-tag mention
+}
+
+type DVMHandler = {
+  stop?: () => void                           // Optional cleanup
+  handleEvent: (e: TrustedEvent) => AsyncGenerator<StampedEvent>
+}
+```
+
+### Automatic Response Tags
+
+The DVM automatically adds these tags to response events:
+- `["request", JSON.stringify(request)]` - Original request
+- `["i", ...]` - Input tag if present in request
+- `["p", pubkey]` - Requestor's pubkey
+- `["e", id]` - Request event ID
+- `["expiration", timestamp]` - Expiration time if configured
+
+## Features
+
+- 🤖 Easy DVM request and handler creation
+- 🔄 Async generator-based response handling
+- 📊 Progress event support (kind 7000)
+- ⚡️ Automatic tag management
+- 🔒 Built-in request validation
+- ⏰ Configurable timeouts and expiration
+- 📝 Optional event logging
+
+## Dependencies
+
+- nostr-tools: Event signing and key operations
+- @noble/hashes: Cryptographic utilities
+- @welshman/net: Relay communication
+- @welshman/util: Event utilities
+- @welshman/lib: Common utilities
